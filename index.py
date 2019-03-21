@@ -1,9 +1,3 @@
-import urllib.request
-from bs4 import BeautifulSoup
+from data import requirements
 
-department_codes = {
-    'management': 'msci'
-}
-
-
-print(department_codes)
+requirements.get_requirements()
