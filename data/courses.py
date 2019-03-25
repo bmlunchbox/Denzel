@@ -6,7 +6,7 @@ BASE = "http://www.ucalendar.uwaterloo.ca/1920/COURSE/"
 department_urls = ['course-MSCI.html']
 
 
-def get_courses():
+def department_courses():
     page_url = BASE + department_urls[0]
 
     html = urllib.request.urlopen(page_url).read()
@@ -24,5 +24,7 @@ def get_courses():
             if i.text.strip():
                 print(i.text)
 
+# def ratings(course):
 
-
+    # to be called with above information
+    # dependency to get JavaScript rendered information
