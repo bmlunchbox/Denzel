@@ -15,7 +15,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "server": "node server --exec"
+    "server": "node server --exec",
+    "dev": "run-p server start"
   },
   "eslintConfig": {
     "extends": "react-app"

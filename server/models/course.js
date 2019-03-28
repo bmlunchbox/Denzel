@@ -19,4 +19,4 @@ var courseSchema = new mongoose.Schema({
 
 var Course = mongoose.model('Recipe', courseSchema);
 
-module.exports = Recipe;
+module.exports = Course;
