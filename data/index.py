@@ -1,4 +1,4 @@
-from data import requirements, courses
+from scrape import courses
 from models import server
 
 # Update Database button in UI
@@ -10,4 +10,7 @@ from models import server
 # compute courses and rejected available ones
 # return as package in API
 
-server.connect()
+# server.connect()
+
+# courses.department_courses()
+

@@ -1,4 +1,3 @@
-import dns
 from pymongo import MongoClient
 
 
