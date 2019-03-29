@@ -1,6 +1,6 @@
 import urllib.request
 from bs4 import BeautifulSoup
-from data import uwflow
+from scrape import uwflow
 
 # will have to change the 1920 to year if that's a feature
 BASE = "http://www.ucalendar.uwaterloo.ca/1920/COURSE/"
@@ -14,6 +14,8 @@ def department_courses():
     soup = BeautifulSoup(html, 'html.parser')
 
     courses = soup.find_all('center')
+    course_objects = []
+
     for course in courses:
         bold = course.find_all('b')
         code = "".join(bold[0].text.split()[:2]).lower()
@@ -28,9 +30,15 @@ def department_courses():
 
         easy, useful = uwflow.rating(code)
 
-        print(code, course_name, description, notes, easy, useful)
+        course_object = {
+            "course": code,
+            "name": course_name,
+            "description": description,
+            "notes": notes,
+            "easy": easy[0],
+            "useful": useful[0]
+        }
 
-# def ratings(course):
-
-    # to be called with above information
-    # dependency to get JavaScript rendered information
+        course_objects.append(course_object)
+        print(course_objects)
+        return course_objects

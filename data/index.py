@@ -1,16 +1,10 @@
 from scrape import courses
 from models import server
 
-# Update Database button in UI
-# run scripts in data file
-# connect to mongo and write to it
+course_data = courses.department_courses()
 
-# request for computation; receive parameters from frontend
-# get information for computations (read from DB)
-# compute courses and rejected available ones
-# return as package in API
+client = server.connect()
+db = client.CourseData
+courses = db.Courses
 
-# server.connect()
-
-# courses.department_courses()
-
+# courses.insert_many(course_data)
