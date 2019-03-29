@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 
 mongoose.set('debug', true);
-mongoose.connect("mongodb+srv://Brandon:Brandon@coursedata-u7jmw.mongodb.net/test?retryWrites=true", {useNewUrlParser: true},
+mongoose.connect("mongodb+srv://Brandon:Brandon@coursedata-u7jmw.mongodb.net/CourseData", {useNewUrlParser: true},
 	function(err){
 		if(err){
 			console.log("DB failed.");
