@@ -7,8 +7,8 @@ BASE = "http://www.ucalendar.uwaterloo.ca/1920/COURSE/"
 department_urls = ['course-MSCI.html']
 
 
-def department_courses():
-    page_url = BASE + department_urls[0]
+def department_courses(url):
+    page_url = BASE + url
 
     html = urllib.request.urlopen(page_url).read()
     soup = BeautifulSoup(html, 'html.parser')
@@ -22,6 +22,16 @@ def department_courses():
         course_name = bold[1].text
         description = course.find_all('td')[3].text
 
+        availability = []
+        string_list = description.split()
+        if "[Offered:" in string_list:
+            start_index = string_list.index("[Offered:")
+            for temp in string_list[start_index + 1:]:
+                temp = temp.replace("]", '').replace(",", ' ').split()
+                for i in temp:
+                    if i == "F" or i == "S" or i == "W":
+                        availability.append(i)
+
         notes = list()
         italicized = course.find_all('i')
         for i in italicized:
@@ -29,16 +39,26 @@ def department_courses():
                 notes.append(i.text)
 
         easy, useful = uwflow.rating(code)
+        if easy == []:
+            easy = 0
+        else:
+            easy = easy[0].replace('%', '')
+        if useful == []:
+            useful = 0
+        else:
+            useful = useful[0].replace('%', '')
 
         course_object = {
             "course": code,
             "name": course_name,
             "description": description,
+            "availability": availability,
             "notes": notes,
-            "easy": easy[0],
-            "useful": useful[0]
+            "easy": easy,
+            "useful": useful
         }
 
         course_objects.append(course_object)
-        print(course_objects)
-        return course_objects
+        print(course_object)
+
+    return course_objects
