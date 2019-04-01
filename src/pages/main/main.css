@@ -29,3 +29,9 @@
 	margin: 0 auto;
 	padding-top: 100px;
 }
+
+.add-course {
+	cursor: pointer;
+	width: 100%;
+	padding: 0 auto;
+}
