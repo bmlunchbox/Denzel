@@ -5,7 +5,7 @@ var express = require('express'),
 router.get('/', function(req, res){
 	db.Requirements.find()
 		.then(function(requirements){
-			res.json(requirements);
+			res.send(JSON.stringify({status: 200, error: null, response:requirements}));
 		})
 		.catch(function(err){
 			res.send(err);

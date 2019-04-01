@@ -17,6 +17,7 @@ def department_courses(url):
     course_objects = []
 
     for course in courses:
+
         bold = course.find_all('b')
         code = "".join(bold[0].text.split()[:2]).lower()
         course_name = bold[1].text
@@ -38,15 +39,17 @@ def department_courses(url):
             if i.text.strip():
                 notes.append(i.text)
 
-        easy, useful = uwflow.rating(code)
-        if easy == []:
-            easy = 0
-        else:
-            easy = easy[0].replace('%', '')
-        if useful == []:
-            useful = 0
-        else:
-            useful = useful[0].replace('%', '')
+        useful = easy = "0"
+        if code != "syde263":
+            easy, useful = uwflow.rating(code)
+            if easy != []:
+                easy = easy[0].replace('%', '')
+            else:
+                easy = "0"
+            if useful != []:
+                useful = useful[0].replace('%', '')
+            else:
+                useful="0"
 
         course_object = {
             "course": code,
