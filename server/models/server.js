@@ -14,3 +14,4 @@ mongoose.connect("mongodb+srv://Brandon:Brandon@coursedata-u7jmw.mongodb.net/Cou
 mongoose.Promise = Promise;
 
 module.exports.Course = require("./course");
+module.exports.Requirements = require("./requirement");

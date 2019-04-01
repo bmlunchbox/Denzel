@@ -3,9 +3,9 @@ var express = require('express'),
 	db = require("../models/server.js");
 
 router.get('/', function(req, res){
-	db.Course.find()
-		.then(function(courses){
-			res.json(courses);
+	db.Requirements.find()
+		.then(function(requirements){
+			res.json(requirements);
 		})
 		.catch(function(err){
 			res.send(err);
