@@ -1,0 +1,9 @@
+.body{
+	height: 70vh;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.text-container{
+	transform: translateY(200%);	
+}
