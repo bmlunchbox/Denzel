@@ -50,3 +50,10 @@
 	width: 100%;
 	padding: 0 auto;
 }
+
+.submit-course{
+	cursor: pointer;
+	background: none;
+	border: none;
+	outline: none;
+}

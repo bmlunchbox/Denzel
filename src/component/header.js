@@ -5,7 +5,7 @@ class Navbar extends Component {
   render() {
     return (
       <header>
-        <h2><a>Title</a></h2>
+        <h2><a>UW Planner</a></h2>
         <nav>
           <li><a href="/">Home</a></li>
           <li><a href="/about">About</a></li>

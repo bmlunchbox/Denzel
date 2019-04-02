@@ -8,7 +8,7 @@ const terms = {
 	"1A": 0, "1B": 1, "2A": 2, "2B": 3, "3A": 4, "3B": 5, "4A": 6, "4B": 7
 }
 
-const AvailableEntry = ({name, id, availability, description, usefulScore, easyScore}) => {
+const AvailableEntry = ({name, id, availability, description, usefulScore, easyScore, handleSelectCourse}) => {
 	return (
 		<Table.Row>
 			<Table.Cell>{id.toUpperCase()}</Table.Cell>
@@ -28,13 +28,30 @@ const AvailableEntry = ({name, id, availability, description, usefulScore, easyS
 			<Table.Cell textAlign="center">{easyScore}</Table.Cell>
 			<Table.Cell textAlign="center">{usefulScore}</Table.Cell>
 			<Table.Cell>
-				<Form className="add-course">
+				<Form className="add-course"
+					course_name={name} course_id={id}
+					availability={availability} useful={usefulScore} easy={easyScore}
+					onSubmit={handleSelectCourse}
+				>
+				<button type="submit" className="submit-course">
 					<Icon.Group>
 						<Icon className='calendar check outline'/>
 						<Icon className='add corner'/>	
 					</Icon.Group>
+				</button>
 				</Form>
 			</Table.Cell>
+		</Table.Row>
+	);
+}
+
+const SelectedEntry = ({name, id, easy, useful, availability}) => {
+	return (
+		<Table.Row>
+			<Table.Cell>{name} ({id})</Table.Cell>
+			<Table.Cell>{easy}</Table.Cell>
+			<Table.Cell>{useful}</Table.Cell>
+			<Table.Cell>{availability}</Table.Cell>
 		</Table.Row>
 	);
 }
@@ -42,7 +59,7 @@ const AvailableEntry = ({name, id, availability, description, usefulScore, easyS
 const TakenEntry = ({id, name}) => {
 	return (
 		<Table.Row>
-			<Table.Cell className="smaller">{id}</Table.Cell>
+				<Table.Cell className="smaller">{id}</Table.Cell>
 			<Table.Cell className="smaller">{name}</Table.Cell>
 		</Table.Row>
 	);
@@ -75,6 +92,7 @@ class MainPage extends Component {
 		this.handleOpenForm = this.handleOpenForm.bind(this);
 		this.handleCloseForm = this.handleCloseForm.bind(this);
 		this.handleSave = this.handleSave.bind(this);
+		this.handleSelectCourse = this.handleSelectCourse.bind(this);
 	}
 
 	handleOpenForm(){
@@ -85,8 +103,28 @@ class MainPage extends Component {
 		this.setState({showForm: false});
 	}
 
-	reset(){
-		window.location.reload();
+	handleSelectCourse(e){
+		e.preventDefault();
+
+		var selected_obj = {
+			name: e.target.getAttribute("course_name"),
+			id: e.target.getAttribute("course_id").toUpperCase(),
+			availability: e.target.getAttribute("availability"),
+			easy: e.target.getAttribute("easy"),
+			useful: e.target.getAttribute("useful")
+		}
+
+		console.log(this.state.selected);
+		var canAdd = true;
+		this.state.selected.forEach((entry) => {
+			if (entry.id == e.target.getAttribute("course_id").toUpperCase()){
+				canAdd = false
+			}
+		})
+		if (canAdd){
+			var selected = [...this.state.selected, selected_obj];
+			this.setState({selected})
+		}
 	}
 
 	handleSave(user_info){
@@ -149,7 +187,7 @@ class MainPage extends Component {
 			function() {
 				var available = [];
 				this.state.allCourses.forEach((course) => {
-					console.log(course);
+					//console.log(course);
 				});
 			}
 		);
@@ -218,7 +256,7 @@ class MainPage extends Component {
 
 		var initial_available = [];
 		// initially loads all management courses in available table
-		if (!(classOf)){
+		if (!(this.state.classOf)){
 			this.state.allCourses.forEach((course) => {
 				if (course.department === program){
 					var new_obj ={
@@ -234,13 +272,18 @@ class MainPage extends Component {
 					initial_available.push(new_obj);
 				}
 			});
-		} else {
-			// derived from available
+		} else{
+
 		}
 		
 		const availableEntries = initial_available.map((elem) => (
-			<AvailableEntry key={elem.id} {...elem} />
+			<AvailableEntry key={elem.id} {...elem} handleSelectCourse={this.handleSelectCourse} />
 		));
+
+		const selectedEntries = this.state.selected.map((s) => (
+			<SelectedEntry key={s.id} {...s} />
+		));
+
 
 		// get course names of taken courses
 		var taken_pre = [];
@@ -258,10 +301,6 @@ class MainPage extends Component {
 			}
 		});
 
-
-		if (taken_pre){
-
-		}
 		const takenEntries = taken_pre.map((t) => (
 			<TakenEntry key={t.id} {...t}/>
 		));
@@ -294,6 +333,7 @@ class MainPage extends Component {
 								</Table.Row>
 							</Table.Header>
 							<Table.Body>
+								{selectedEntries}
 							</Table.Body>
 						</Table>
 					</div>
