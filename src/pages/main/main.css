@@ -3,7 +3,7 @@
 }
 
 .smaller{
-	font-size: 0.9em;
+	font-size: 0.85em;
 }
 
 .section-one{
@@ -28,6 +28,21 @@
 	width: 90vw;
 	margin: 0 auto;
 	padding-top: 100px;
+	padding-bottom: 100px;
+}
+
+.info-button {
+	cursor: pointer;
+	background: none;
+	border: none;
+	outline: none;
+}
+
+.popup {
+	background: #f2f2f2;
+	color: black;
+	padding: 30px;
+	line-height: 1.4em;
 }
 
 .add-course {

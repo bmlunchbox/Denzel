@@ -11,7 +11,11 @@
 .close-button{
 	width: 10%;
 	float: right;
-	outline: none;
 	border: none;
+	background: none;
 	cursor: pointer;
+}
+
+.submit-button{
+	float: right;
 }

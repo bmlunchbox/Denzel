@@ -4,15 +4,29 @@ import MainForm from './mainform';
 import * as apiCall from "../../api/api";
 import './main.css';
 
-const AvailableEntry = ({name, id, availability, usefulScore, easyScore}) => {
+const terms = {
+	"1A": 0, "1B": 1, "2A": 2, "2B": 3, "3A": 4, "3B": 5, "4A": 6, "4B": 7
+}
+
+const AvailableEntry = ({name, id, availability, description, usefulScore, easyScore}) => {
 	return (
 		<Table.Row>
 			<Table.Cell>{id.toUpperCase()}</Table.Cell>
 			<Table.Cell>{name}</Table.Cell>
-			<Table.Cell>{availability}</Table.Cell>
-			<Table.Cell>TBD</Table.Cell>
-			<Table.Cell>{easyScore}</Table.Cell>
-			<Table.Cell>{usefulScore}</Table.Cell>
+			<Modal
+				trigger={<Table.Cell textAlign="left">
+							<button className="info-button">
+								<Icon className="info"></Icon>
+							</button>
+						</Table.Cell>}
+				basic size='tiny'
+			>
+				<div className="popup">{description}</div>
+			</Modal>
+			<Table.Cell textAlign="center">{availability}</Table.Cell>
+			<Table.Cell textAlign="center">TBD</Table.Cell>
+			<Table.Cell textAlign="center">{easyScore}</Table.Cell>
+			<Table.Cell textAlign="center">{usefulScore}</Table.Cell>
 			<Table.Cell>
 				<Form className="add-course">
 					<Icon.Group>
@@ -25,6 +39,15 @@ const AvailableEntry = ({name, id, availability, usefulScore, easyScore}) => {
 	);
 }
 
+const TakenEntry = ({id, name}) => {
+	return (
+		<Table.Row>
+			<Table.Cell className="smaller">{id}</Table.Cell>
+			<Table.Cell className="smaller">{name}</Table.Cell>
+		</Table.Row>
+	);
+}
+
 class MainPage extends Component {
 	constructor(props){
 		super(props);
@@ -33,19 +56,25 @@ class MainPage extends Component {
 			// updated by program, term level, grad year
 			// updated by elective dropdown in form
 			taken:[],
-			// courses selected from available
+			// courses selected from available loads selected
 			selected:[],
-			// courses filtered from allCourses
+			// courses filtered from allCourses loads available on second time
 			available:[],
 			// courses from API
 			allCourses:[],
 			// requirements from API
 			termRequirements: [],
+
+			program: 'MSCI',
+			classOf: '',
+			nextTerm: '',
+			average: '',
 			showForm: false
 		};
 
 		this.handleOpenForm = this.handleOpenForm.bind(this);
 		this.handleCloseForm = this.handleCloseForm.bind(this);
+		this.handleSave = this.handleSave.bind(this);
 	}
 
 	handleOpenForm(){
@@ -58,6 +87,72 @@ class MainPage extends Component {
 
 	reset(){
 		window.location.reload();
+	}
+
+	handleSave(user_info){
+		this.setState({
+			classOf: user_info.classOf,
+			nextTerm: user_info.nextTerm,
+			average: user_info.average,
+			showForm: false
+		})
+
+		// list of terms completed
+		var terms_completed = [];
+		// list of terms to come
+		var terms_not = [];
+		var nextVal = terms[user_info.nextTerm]
+		for (var key in terms){
+			if (terms.hasOwnProperty(key)){
+				if (terms[key] <= nextVal) {
+					terms_completed.push(key);
+				} else {
+					terms_not.push(key);
+				}
+			}
+		}
+
+		// get the right term in the right calendar year 
+		var temp_courses_taken = this.state.taken;
+		// filter out the term requirements state
+		var correct_term_req = [];
+		terms_completed.forEach((completed) => {
+			this.state.termRequirements.forEach((term) => {
+
+				// collect all courses taken by default calendar, elective indicated
+				if (term.classOf == user_info.classOf && term.term == completed){
+					temp_courses_taken = [...temp_courses_taken, ...term.courses, ...user_info.taken];
+					correct_term_req.push(term);
+				}
+			});
+		});
+
+		// get number of electives per term
+		terms_not.forEach((futureTerm) => {
+			this.state.termRequirements.forEach((term) => {
+				if (term.classOf == user_info.classOf && term.term == futureTerm){
+					correct_term_req.push(term);
+				}
+			})
+		})
+
+		// remove duplicates in temp_courses_taken
+		var filtered_list = [];
+		temp_courses_taken.forEach((t) => {
+			if (!(filtered_list.includes(t))){
+				filtered_list.push(t);
+			}
+		})
+
+		// in callback, filter out allCourses into available, checking prereqs
+		this.setState({taken: filtered_list, termRequirements: correct_term_req}, 
+			function() {
+				var available = [];
+				this.state.allCourses.forEach((course) => {
+					console.log(course);
+				});
+			}
+		);
 	}
 
 	async loadCourses(){
@@ -93,9 +188,23 @@ class MainPage extends Component {
 	async loadRequirements(){
 		let response = await apiCall.getRequirements();
 		if (response.status === 200 && response.response){
-			var courses = [];
 
-			//console.log(response);
+			var t = [];
+			response.response.map((entry) => {
+				var program = entry.program;
+				var classOf = entry.class;
+
+				var termDict = entry.terms;
+				for (var key in termDict){
+					if (termDict.hasOwnProperty(key)){
+						var tempObj = termDict[key];
+						tempObj["program"] = program;
+						tempObj["classOf"] = classOf;
+						t.push(tempObj);
+					}
+				}
+			})
+			this.setState({termRequirements: t});
 		}
 	}
 
@@ -105,26 +214,56 @@ class MainPage extends Component {
 	}
 
 	render(){
-		const {showForm, allCourses} = this.state;
+		const {classOf, program, showForm, allCourses} = this.state;
 
-		// loads all management courses in available table
 		var initial_available = [];
-		this.state.allCourses.forEach((course) => {
-			if (course.department === "MSCI"){
-				var new_obj ={
-					id: course.courseId,
-					department: course.department,
-					name: course.courseName,
-					easyScore: course.easyScore,
-					usefulScore: course.usefulScore,
-					availability: course.availability.join(", "),
-					prereq: course.prereq
-				};
-				initial_available.push(new_obj);
-			}
-		});
+		// initially loads all management courses in available table
+		if (!(classOf)){
+			this.state.allCourses.forEach((course) => {
+				if (course.department === program){
+					var new_obj ={
+						id: course.courseId,
+						department: course.department,
+						name: course.courseName,
+						easyScore: course.easyScore,
+						usefulScore: course.usefulScore,
+						description: course.description,
+						availability: course.availability.join(", "),
+						prereq: course.prereq
+					};
+					initial_available.push(new_obj);
+				}
+			});
+		} else {
+			// derived from available
+		}
+		
 		const availableEntries = initial_available.map((elem) => (
 			<AvailableEntry key={elem.id} {...elem} />
+		));
+
+		// get course names of taken courses
+		var taken_pre = [];
+		this.state.taken.forEach((courseTaken) => {
+			var courseName = "";
+			this.state.allCourses.forEach((course) => {
+				var id = course.courseId.toUpperCase();
+				if (id == courseTaken){
+					courseName = course.courseName;
+					taken_pre.push({name: courseName, id: id});
+				}
+			})
+			if (!(courseName)){
+				taken_pre.push({name: "N/A", id: courseTaken});
+			}
+		});
+
+
+		if (taken_pre){
+
+		}
+		const takenEntries = taken_pre.map((t) => (
+			<TakenEntry key={t.id} {...t}/>
 		));
 
 		return(
@@ -139,11 +278,12 @@ class MainPage extends Component {
 					<MainForm
 						data={allCourses}
 						onClose={this.handleCloseForm}
+						onSave={this.handleSave}
 					/>
 				</Modal>
 				<div className="section-one">
 					<div className="selected-table">
-						<h3>Selected Courses</h3>
+						<h3>Want to Take</h3>
 						<Table className="ui celled table">
 							<Table.Header>
 								<Table.Row>
@@ -162,11 +302,12 @@ class MainPage extends Component {
 						<Table className="ui celled table">
 							<Table.Header>
 								<Table.Row>
-									<Table.HeaderCell className="ten wide" textAlign='center'>Course</Table.HeaderCell>
-									<Table.HeaderCell className="six wide smaller" textAlign='center'>Term</Table.HeaderCell>
+									<Table.HeaderCell className="four wide smaller" textAlign='center'>Code</Table.HeaderCell>
+									<Table.HeaderCell className="twelve wide smaller" textAlign='center'>Course</Table.HeaderCell>
 								</Table.Row>
 							</Table.Header>
 							<Table.Body>
+								{takenEntries}
 							</Table.Body>
 						</Table>
 					</div>
@@ -177,8 +318,9 @@ class MainPage extends Component {
 						<Table.Header>
 							<Table.Row>
 								<Table.HeaderCell className="two wide" textAlign='center'>Code</Table.HeaderCell>
-								<Table.HeaderCell className="six wide" textAlign='center'>Course</Table.HeaderCell>
-								<Table.HeaderCell className="two wide" textAlign='center'>Availability</Table.HeaderCell>
+								<Table.HeaderCell className="five wide" textAlign='center'>Course</Table.HeaderCell>
+								<Table.HeaderCell className="two wide" textAlign='center'></Table.HeaderCell>
+								<Table.HeaderCell className="one wide smaller" textAlign='center'>Availability</Table.HeaderCell>
 								<Table.HeaderCell className="two wide" textAlign='center'>Eligible</Table.HeaderCell>
 								<Table.HeaderCell className="one wide smaller" textAlign='center'>Easiness</Table.HeaderCell>
 								<Table.HeaderCell className="one wide smaller" textAlign='center'>Usefulness</Table.HeaderCell>

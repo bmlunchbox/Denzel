@@ -12,11 +12,35 @@ class MainForm extends Component {
 		super(props);
 		this.state ={
 			program: 'MSCI',
-			class: '',
+			classOf: '',
 			nextTerm: '',
 			average: '',
 			taken: []
 		}
+
+		this.handleChange = this.handleChange.bind(this);
+		this.handleDropdownChange = this.handleDropdownChange.bind(this);
+		this.handleSubmit = this.handleSubmit.bind(this);
+	}
+
+	handleChange(e){
+		this.setState({[e.target.name]: e.target.value});
+	}
+
+	handleDropdownChange(e, data){
+		this.setState({[data.name]: data.value});
+	}
+
+	handleSubmit(e){
+		e.preventDefault();
+		this.props.onSave({...this.state});
+		this.setState({
+			program: 'MSCI',
+			classOf: '',
+			nextTerm: '',
+			average: '',
+			taken: []
+		});
 	}
 
 	render(){
@@ -50,7 +74,7 @@ class MainForm extends Component {
 		});
 
 		return(
-			<Form className="main-form">
+			<Form className="main-form" onSubmit={this.handleSubmit}>
 				<button
 					className="close-button"
 					onClick={onClose}
@@ -68,29 +92,41 @@ class MainForm extends Component {
 					<label>Class Of:</label>
 					<Dropdown
 						fluid selection
+						name="classOf"
+						placeholder="Graduating Year"
 						options={yearOptions}
+						onChange={this.handleDropdownChange}
 					/>
 				</Form.Field>
 				<Form.Field>
 					<label>Next Academic Term:</label>
 					<Dropdown
 						fluid selection
+						name="nextTerm"
+						placeholder="Next Term"
 						options={termOptions}
+						onChange={this.handleDropdownChange}
 					/>
 				</Form.Field>
 				<Form.Field>
 					<label>Previous Term Average:</label>
-					<input type="number" min={0} max={100} required />
+					<input 
+						name="average" type="number" min={0} 
+						max={100} placeholder="Latest Term Average" 
+						required onChange={this.handleChange}
+					/>
 				</Form.Field>
 				<Form.Field>
 					<label>Previous Electives:</label>
 					<Dropdown 
 						fluid selection multiple search
+						name="taken"
 						placeholder="Electives"
 						options={electiveOptions}
+						onChange={this.handleDropdownChange}
 					/>
 				</Form.Field>
-				<Button className="submit">Submit</Button>
+				<Button className="submit-button" color="green" type="submit">Submit</Button>
 			</Form>
 		);
 	}
