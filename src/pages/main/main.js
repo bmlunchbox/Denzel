@@ -8,7 +8,7 @@ const terms = {
 	"1A": 0, "1B": 1, "2A": 2, "2B": 3, "3A": 4, "3B": 5, "4A": 6, "4B": 7
 }
 
-const AvailableEntry = ({name, id, availability, description, usefulScore, easyScore, handleSelectCourse}) => {
+const AvailableEntry = ({name, id, availability, description, eligible, usefulScore, easyScore, handleSelectCourse}) => {
 	return (
 		<Table.Row>
 			<Table.Cell>{id.toUpperCase()}</Table.Cell>
@@ -24,12 +24,12 @@ const AvailableEntry = ({name, id, availability, description, usefulScore, easyS
 				<div className="popup">{description}</div>
 			</Modal>
 			<Table.Cell textAlign="center">{availability}</Table.Cell>
-			<Table.Cell textAlign="center">TBD</Table.Cell>
+			<Table.Cell textAlign="center"><Icon className={eligible}/></Table.Cell>
 			<Table.Cell textAlign="center">{easyScore}</Table.Cell>
 			<Table.Cell textAlign="center">{usefulScore}</Table.Cell>
 			<Table.Cell>
 				<Form className="add-course"
-					course_name={name} course_id={id}
+					course_name={name} course_id={id} eligible={eligible}
 					availability={availability} useful={usefulScore} easy={easyScore}
 					onSubmit={handleSelectCourse}
 				>
@@ -45,13 +45,14 @@ const AvailableEntry = ({name, id, availability, description, usefulScore, easyS
 	);
 }
 
-const SelectedEntry = ({name, id, easy, useful, availability}) => {
+const SelectedEntry = ({name, id, easy, useful, availability, eligible}) => {
 	return (
 		<Table.Row>
 			<Table.Cell>{name} ({id})</Table.Cell>
 			<Table.Cell>{easy}</Table.Cell>
 			<Table.Cell>{useful}</Table.Cell>
 			<Table.Cell>{availability}</Table.Cell>
+			<Table.Cell><Icon className={eligible}/></Table.Cell>
 		</Table.Row>
 	);
 }
@@ -110,11 +111,11 @@ class MainPage extends Component {
 			name: e.target.getAttribute("course_name"),
 			id: e.target.getAttribute("course_id").toUpperCase(),
 			availability: e.target.getAttribute("availability"),
+			eligible: e.target.getAttribute("eligible"),
 			easy: e.target.getAttribute("easy"),
 			useful: e.target.getAttribute("useful")
 		}
 
-		console.log(this.state.selected);
 		var canAdd = true;
 		this.state.selected.forEach((entry) => {
 			if (entry.id == e.target.getAttribute("course_id").toUpperCase()){
@@ -187,8 +188,25 @@ class MainPage extends Component {
 			function() {
 				var available = [];
 				this.state.allCourses.forEach((course) => {
-					//console.log(course);
+					if (course.department == this.state.program){
+						if (course.prereq){
+							course.prereq.forEach((pre) => {
+								if (pre){
+									var inCourse = filtered_list.includes(pre.toUpperCase());
+									var inTerm = terms_completed.includes(pre.toUpperCase());
+									var alreadyAdded = available.includes(course.courseId);
+
+									if ((inCourse || inTerm) && alreadyAdded == false){
+										available.push(course.courseId.toUpperCase());
+									}
+								}
+							})
+						} else{
+							available.push(course.courseId.toUpperCase());
+						}
+					}
 				});
+				this.setState({available: available, selected:[]});
 			}
 		);
 	}
@@ -254,7 +272,7 @@ class MainPage extends Component {
 	render(){
 		const {classOf, program, showForm, allCourses} = this.state;
 
-		var initial_available = [];
+		var available = [];
 		// initially loads all management courses in available table
 		if (!(this.state.classOf)){
 			this.state.allCourses.forEach((course) => {
@@ -265,18 +283,41 @@ class MainPage extends Component {
 						name: course.courseName,
 						easyScore: course.easyScore,
 						usefulScore: course.usefulScore,
+						eligible: "question",
 						description: course.description,
 						availability: course.availability.join(", "),
 						prereq: course.prereq
 					};
-					initial_available.push(new_obj);
+					available.push(new_obj);
 				}
 			});
 		} else{
+			this.state.allCourses.forEach((course) => {
+				if (course.department === program){
+					if (!(this.state.taken.includes(course.courseId.toUpperCase()))){
+						var eligible = "times";
+						if (this.state.available.includes(course.courseId.toUpperCase())){
+							eligible = "check";
+						}
 
+						var new_obj ={
+							id: course.courseId,
+							department: course.department,
+							name: course.courseName,
+							easyScore: course.easyScore,
+							usefulScore: course.usefulScore,
+							eligible: eligible,
+							description: course.description,
+							availability: course.availability.join(", "),
+							prereq: course.prereq
+						};
+						available.push(new_obj);
+					}
+				}
+			});
 		}
 		
-		const availableEntries = initial_available.map((elem) => (
+		const availableEntries = available.map((elem) => (
 			<AvailableEntry key={elem.id} {...elem} handleSelectCourse={this.handleSelectCourse} />
 		));
 
@@ -326,10 +367,11 @@ class MainPage extends Component {
 						<Table className="ui celled table">
 							<Table.Header>
 								<Table.Row>
-									<Table.HeaderCell className="seven wide" textAlign='center'>Course</Table.HeaderCell>
+									<Table.HeaderCell className="six wide" textAlign='center'>Course</Table.HeaderCell>
 									<Table.HeaderCell className="three wide" textAlign='center'>Easiness</Table.HeaderCell>
 									<Table.HeaderCell className="three wide" textAlign='center'>Usefulness</Table.HeaderCell>
 									<Table.HeaderCell className="three wide" textAlign='center'>Term</Table.HeaderCell>
+									<Table.HeaderCell className="one wide" textAlign='center'>Eligible</Table.HeaderCell>
 								</Table.Row>
 							</Table.Header>
 							<Table.Body>
@@ -361,7 +403,7 @@ class MainPage extends Component {
 								<Table.HeaderCell className="five wide" textAlign='center'>Course</Table.HeaderCell>
 								<Table.HeaderCell className="two wide" textAlign='center'></Table.HeaderCell>
 								<Table.HeaderCell className="one wide smaller" textAlign='center'>Availability</Table.HeaderCell>
-								<Table.HeaderCell className="two wide" textAlign='center'>Eligible</Table.HeaderCell>
+								<Table.HeaderCell className="two wide smaller" textAlign='center'>Eligible</Table.HeaderCell>
 								<Table.HeaderCell className="one wide smaller" textAlign='center'>Easiness</Table.HeaderCell>
 								<Table.HeaderCell className="one wide smaller" textAlign='center'>Usefulness</Table.HeaderCell>
 								<Table.HeaderCell className="one wide"></Table.HeaderCell>
